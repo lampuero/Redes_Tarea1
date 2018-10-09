@@ -10,15 +10,14 @@ class ClientConnection:
     def read_response(self):
         message = ""
         raw_char_message = self.socket.recv(1024)
-        while not '\n' in message:
+        while '\n' not in message:
             char_message = raw_char_message.decode()
             message += char_message
-        # seccion critica
-        print("Server {} respondio:\n".format(self.server_name))
-        print(message)
-        # seccion critica
+        return "Server {} respondio:\n{}".format(
+            self.server_name,
+            message)
 
-    def write_command(self,command):
+    def write_command(self, command):
         command_byte = command.encode()
         self.socket.send(command_byte)
 
