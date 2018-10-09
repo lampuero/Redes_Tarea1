@@ -5,16 +5,16 @@ class ClientConnection:
     def __init__(self, name, address, port):
         self.socket = socket.socket()
         self.server_name = name
-        self.socket.connect((address,port))
+        self.socket.connect((address, port))
 
     def read_response(self):
         message = ""
         raw_char_message = self.socket.recv(1024)
-        while raw_char_message != b'':
+        while not '\n' in message:
             char_message = raw_char_message.decode()
             message += char_message
         # seccion critica
-        print("Server %s respondio:\n", self.server_name)
+        print("Server {} respondio:\n".format(self.server_name))
         print(message)
         # seccion critica
 
@@ -38,6 +38,7 @@ def mainclient():
             address = servers_data_split[i+1]
             port = int(servers_data_split[i+2])
             servers_dict[name] = ClientConnection(name, address, port)
+            i += 3
 
     while True:
         # seccion critica 1
