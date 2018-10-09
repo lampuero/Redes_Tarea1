@@ -48,7 +48,9 @@ def mainclient():
             if name in servers_dict.keys():
                 connection = servers_dict[name]
                 connection.write_command(command)
-                connection.read_response()
+                # lo siguiente debe realiarse en otro thread o similar
+                response = connection.read_response()
+                print(response)
             else:
                 print("El nombre de server %s no es valido", name)
         # seccion critica 1
