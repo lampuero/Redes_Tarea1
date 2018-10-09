@@ -36,24 +36,30 @@ def mainclient():
             name = servers_data_split[i]
             address = servers_data_split[i+1]
             port = int(servers_data_split[i+2])
-            servers_dict[name] = ClientConnection(name, address, port)
+            server_connection = ClientConnection(name, address, port)
+            servers_dict[name] = server_connection
+            print(server_connection.read_response())  # <-- esto es para el saludo que envia el server a conectarse
             i += 3
 
     while True:
-        # seccion critica 1
+        # seccion critica leer
         command = input("Ingrese el comando:")
         servers_to_send_command = input("Ingrese el nombre de los servers:")
+        # seccion critica leer
         servers_names = servers_to_send_command.split(" ")
         for name in servers_names:
+            response = ""
             if name in servers_dict.keys():
                 connection = servers_dict[name]
                 connection.write_command(command)
                 # lo siguiente debe realiarse en otro thread o similar
-                response = connection.read_response()
-                print(response)
+                response += connection.read_response()
+
             else:
-                print("El nombre de server %s no es valido", name)
-        # seccion critica 1
+                response += "El nombre de server {} no es valido".format(name)
+            # seccion critica escribir
+            print(response)
+            # seccion critica escribir
 
 
 mainclient()
