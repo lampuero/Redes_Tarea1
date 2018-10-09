@@ -1,7 +1,6 @@
 import socket
 
 
-
 class ClientConnection:
     def __init__(self, name, address, port):
         self.socket = socket.socket()
@@ -23,8 +22,9 @@ class ClientConnection:
         command_byte = command.encode()
         self.socket.send(command_byte)
 
+
 def mainclient():
-    servers = dict()
+    servers_dict = dict()
 
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
@@ -37,17 +37,21 @@ def mainclient():
             name = servers_data_split[i]
             address = servers_data_split[i+1]
             port = int(servers_data_split[i+2])
-            servers[name] = ClientConnection(name, address, port)
-    
+            servers_dict[name] = ClientConnection(name, address, port)
+
+    while True:
+        # seccion critica 1
+        command = input("Ingrese el comando:")
+        servers_to_send_command = input("Ingrese el nombre de los servers:")
+        servers_names = servers_to_send_command.split(" ")
+        for name in servers_names:
+            if name in servers_dict.keys():
+                connection = servers_dict[name]
+                connection.write_command(command)
+                connection.read_response()
+            else:
+                print("El nombre de server %s no es valido", name)
+        # seccion critica 1
 
 
-
-def client(servers_name):
-    pass
-
-servers_data = input('Ingrese los datos de los servers en una linea\n')
-print(type(servers_data))
-servers_data_split = servers_data
-while True:
-    message =input('-> ')
-    print (message)
+mainclient()
