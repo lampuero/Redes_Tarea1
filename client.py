@@ -31,7 +31,7 @@ def mainclient():
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
     if servers_data_split.__len__() == 1:
-        JSON_data = json.loads(servers_data_split)
+        JSON_data = json.loads(open(servers_data_split[0]).read())
         for server in JSON_data:
             name = server['nombre']
             address = server['direccion']
@@ -56,19 +56,21 @@ def mainclient():
         servers_to_send_command = input("Ingrese el nombre de los servers:")
         # seccion critica leer
         servers_names = servers_to_send_command.split(" ")
-        for name in servers_names:
-            response = ""
-            if name in servers_dict.keys():
+        if (servers_names[0] == "all" and len(servers_names)):
+            for name in servers_dict.keys():
                 connection = servers_dict[name]
                 connection.write_command(command)
-                # lo siguiente debe realiarse en otro thread o similar
-                response += connection.read_response()
-
-            else:
-                response += "El nombre de server {} no es valido".format(name)
-            # seccion critica escribir
-            print(response)
-            # seccion critica escribir
+        else:
+            for name in servers_names:
+                response = ""
+                if name in servers_dict.keys():
+                    connection = servers_dict[name]
+                    connection.write_command(command)
+                else:
+                    response += "El nombre de server {} no es valido".format(name)
+                # seccion critica escribir
+                print(response)
+                # seccion critica escribir
 
 
 mainclient()
