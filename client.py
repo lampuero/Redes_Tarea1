@@ -11,8 +11,11 @@ class ClientConnection:
         message = ""
         raw_char_message = self.socket.recv(1024)
         while '\n' not in message:
-            char_message = raw_char_message.decode()
-            message += char_message
+            if not raw_char_message:
+                message = "Servidor cerro la conexion a peticion del cliente.\n"
+            else:
+                char_message = raw_char_message.decode()
+                message += char_message
         return "Server {} respondio:\n{}".format(
             self.server_name,
             message)
