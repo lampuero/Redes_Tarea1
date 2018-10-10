@@ -1,5 +1,5 @@
 import socket
-
+import json
 
 class ClientConnection:
     def __init__(self, name, address, port):
@@ -31,8 +31,14 @@ def mainclient():
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
     if servers_data_split.__len__() == 1:
-        pass
-        # procesar json
+        JSON_data = json.loads(servers_data_split)
+        for server in JSON_data:
+            name = server['nombre']
+            address = server['direccion']
+            port = int (server['puerto'])
+            server_connection = ClientConnection(name, address, port)
+            servers_dict[name] = server_connection
+            print(server_connection.read_response())
     else:
         i = 0
         while i < len(servers_data_split):
