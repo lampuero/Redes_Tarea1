@@ -1,0 +1,4 @@
+- Para los nombres de servidores duplicados, se mantiene en el diccionario el último servidor ingresado.
+- Para ejecutar los servidores basta ejecutar en terminal ./server port, donde port por defecto es 8000.
+- Para ejecutar un cliente python3 client.py, luego seguir las instrucciones en pantalla.
+- Se incluye un archivo .json de ejemplo.
