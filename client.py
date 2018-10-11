@@ -12,7 +12,6 @@ def input_with_timeout(prompt, timeout):
         return sys.stdin.readline().rstrip('\n') # expect stdin to be line-buffered
 
 
-
 class ClientConnection:
     def __init__(self, name, address, port):
         self.socket = socket.socket()
@@ -45,9 +44,9 @@ def mainclient():
     posible_response = []
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
-    if servers_data_split.__len__() == 1:
-        JSON_data = json.loads(open(servers_data_split[0]).read())
-        for server in JSON_data:
+    if len(servers_data_split) == 1:
+        json_data = json.loads(open(servers_data_split[0]).read())
+        for server in json_data:
             name = server['nombre']
             address = server['direccion']
             port = int (server['puerto'])
