@@ -1,5 +1,17 @@
 import socket
 import json
+import select
+import sys
+
+
+def input_with_timeout(prompt, timeout):
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    ready, _, _ = select.select([sys.stdin], [],[], timeout)
+    if ready:
+        return sys.stdin.readline().rstrip('\n') # expect stdin to be line-buffered
+
+
 
 class ClientConnection:
     def __init__(self, name, address, port):
@@ -24,10 +36,13 @@ class ClientConnection:
         command_byte = command.encode()
         self.socket.send(command_byte)
 
+    def fileno(self):
+        return self.socket.fileno()
+
 
 def mainclient():
     servers_dict = dict()
-
+    posible_response = []
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
     if servers_data_split.__len__() == 1:
@@ -47,10 +62,14 @@ def mainclient():
             port = int(servers_data_split[i+2])
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
+            posible_response.append(server_connection)
             print(server_connection.read_response())  # <-- esto es para el saludo que envia el server a conectarse
             i += 3
 
     while True:
+        inready, outready, exready = select.select(posible_response, [], [], 3)
+        for connection in inready:
+            print(connection.read_response())
         # seccion critica leer
         command = input("Ingrese el comando:")
         servers_to_send_command = input("Ingrese el nombre de los servers:")
@@ -62,14 +81,14 @@ def mainclient():
                 connection.write_command(command)
         else:
             for name in servers_names:
-                response = ""
+                #response = ""
                 if name in servers_dict.keys():
                     connection = servers_dict[name]
                     connection.write_command(command)
                 else:
-                    response += "El nombre de server {} no es valido".format(name)
+                    print("El nombre de server {} no es valido".format(name))
                 # seccion critica escribir
-                print(response)
+                #print(response)
                 # seccion critica escribir
 
 
