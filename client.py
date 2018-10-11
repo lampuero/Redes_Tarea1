@@ -1,4 +1,5 @@
 import socket
+import json
 import select
 import sys
 
@@ -9,6 +10,7 @@ def input_with_timeout(prompt, timeout):
     ready, _, _ = select.select([sys.stdin], [],[], timeout)
     if ready:
         return sys.stdin.readline().rstrip('\n') # expect stdin to be line-buffered
+
 
 
 class ClientConnection:
@@ -44,8 +46,14 @@ def mainclient():
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
     if servers_data_split.__len__() == 1:
-        pass
-        # procesar json
+        JSON_data = json.loads(open(servers_data_split[0]).read())
+        for server in JSON_data:
+            name = server['nombre']
+            address = server['direccion']
+            port = int (server['puerto'])
+            server_connection = ClientConnection(name, address, port)
+            servers_dict[name] = server_connection
+            print(server_connection.read_response())
     else:
         i = 0
         while i < len(servers_data_split):
@@ -67,19 +75,21 @@ def mainclient():
         servers_to_send_command = input("Ingrese el nombre de los servers:")
         # seccion critica leer
         servers_names = servers_to_send_command.split(" ")
-        for name in servers_names:
-            response = ""
-            if name in servers_dict.keys():
+        if (servers_names[0] == "all" and len(servers_names)):
+            for name in servers_dict.keys():
                 connection = servers_dict[name]
                 connection.write_command(command)
-                # lo siguiente debe realiarse en otro thread o similar
-                #response += connection.read_response()
-
-            else:
-                print("El nombre de server {} no es valido".format(name))
-            # seccion critica escribir
-            #print(response)
-            # seccion critica escribir
+        else:
+            for name in servers_names:
+                #response = ""
+                if name in servers_dict.keys():
+                    connection = servers_dict[name]
+                    connection.write_command(command)
+                else:
+                    print("El nombre de server {} no es valido".format(name))
+                # seccion critica escribir
+                #print(response)
+                # seccion critica escribir
 
 
 mainclient()
