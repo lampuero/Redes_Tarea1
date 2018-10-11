@@ -2,4 +2,5 @@
 - También que un nombre de servidor no puede tener espacios en blanco entre medio. Por ejemplo: "servidor 1"
 - Para ejecutar los servidores basta ejecutar en terminal ./server port, donde port por defecto es 8000.
 - Para ejecutar un cliente python3 client.py, luego seguir las instrucciones en pantalla.
+- Se diferencian las respuestas de los servidores usando el nombre asignado.
 - Se incluye un archivo .json de ejemplo.
