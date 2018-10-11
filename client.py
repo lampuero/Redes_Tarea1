@@ -4,6 +4,9 @@ import select
 import signal
 
 
+"""
+Excepcion que se levanta cuando el usuario se demora mucho en escribir el comando o los nombres de servidor a enviar el comando.
+"""
 class TimeoutExpired(Exception):
     pass
 
@@ -12,6 +15,9 @@ def alarm_handler(signum, frame):
     raise TimeoutExpired
 
 
+"""
+Funcion para recibir un input pero con tiempo limite.
+"""
 def input_with_timeout(prompt, timeout):
     # set signal handler
     signal.signal(signal.SIGALRM, alarm_handler)
@@ -24,12 +30,18 @@ def input_with_timeout(prompt, timeout):
         signal.alarm(0)  # cancel alarm
 
 
+"""
+Clase que contiene un socket conectado a un servidor telnet y el nombre de ese servidor.
+"""
 class ClientConnection:
     def __init__(self, name, address, port):
         self.socket = socket.socket()
         self.server_name = name
         self.socket.connect((address, port))
 
+    """
+    Lee respuesta de servidor telnet.
+    """
     def read_response(self):
         message = ""
         raw_char_message = self.socket.recv(1024)
@@ -43,10 +55,16 @@ class ClientConnection:
             self.server_name,
             message)
 
+    """
+    Escribe comando a servidor telnet.
+    """
     def write_command(self, command):
         command_byte = command.encode()
         self.socket.send(command_byte)
 
+    """
+    Necesario para select.
+    """
     def fileno(self):
         return self.socket.fileno()
 
@@ -55,15 +73,18 @@ def mainclient():
     servers_dict = dict()
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
+    # Proceso datos de los servidores
     if len(servers_data_split) == 1:
+        # Caso json
         json_data = json.loads(open(servers_data_split[0]).read())
         for server in json_data:
             name = server['nombre']
             address = server['direccion']
-            port = int (server['puerto'])
+            port = int(server['puerto'])
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
     else:
+        # Caso manual
         i = 0
         while i < len(servers_data_split):
             name = servers_data_split[i]
@@ -72,9 +93,10 @@ def mainclient():
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
             i += 3
+    # Ingreso de los comandos
     while True:
-        inready, outready, exready = select.select(servers_dict.values(), [], [], 3)
-        for connection in inready:
+        servers_with_response, _, _ = select.select(servers_dict.values(), [], [], 3)
+        for connection in servers_with_response:
             print(connection.read_response())
         try:
             command = input_with_timeout("Ingrese el comando:", 10)
