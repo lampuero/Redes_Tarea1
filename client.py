@@ -2,14 +2,28 @@ import socket
 import json
 import select
 import sys
+import signal
+
+
+class TimeoutExpired(Exception):
+    pass
+
+
+def alarm_handler(signum, frame):
+    raise TimeoutExpired
 
 
 def input_with_timeout(prompt, timeout):
-    sys.stdout.write(prompt)
-    sys.stdout.flush()
-    ready, _, _ = select.select([sys.stdin], [],[], timeout)
-    if ready:
-        return sys.stdin.readline().rstrip('\n') # expect stdin to be line-buffered
+    # set signal handler
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout)  # produce SIGALRM in `timeout` seconds
+
+    try:
+        cmd = ""
+        cmd = input(prompt)
+        return cmd
+    finally:
+        signal.alarm(0) # cancel alarm
 
 
 class ClientConnection:
@@ -52,7 +66,7 @@ def mainclient():
             port = int (server['puerto'])
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
-            print(server_connection.read_response())
+            # print(server_connection.read_response())
     else:
         i = 0
         while i < len(servers_data_split):
@@ -62,7 +76,7 @@ def mainclient():
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
             posible_response.append(server_connection)
-            print(server_connection.read_response())  # <-- esto es para el saludo que envia el server a conectarse
+            # print(server_connection.read_response())  # <-- esto es para el saludo que envia el server a conectarse
             i += 3
 
     while True:
@@ -70,25 +84,26 @@ def mainclient():
         for connection in inready:
             print(connection.read_response())
         # seccion critica leer
-        command = input("Ingrese el comando:")
-        servers_to_send_command = input("Ingrese el nombre de los servers:")
-        # seccion critica leer
-        servers_names = servers_to_send_command.split(" ")
-        if (servers_names[0] == "all" and len(servers_names)):
-            for name in servers_dict.keys():
-                connection = servers_dict[name]
-                connection.write_command(command)
-        else:
-            for name in servers_names:
-                #response = ""
-                if name in servers_dict.keys():
+        try:
+            command = input_with_timeout("Ingrese el comando:", 10)
+            servers_to_send_command = input_with_timeout("Ingrese el nombre de los servers:", 10)
+            servers_names = servers_to_send_command.split(" ")
+            if servers_names[0] == "all" and len(servers_names):
+                for name in servers_dict.keys():
                     connection = servers_dict[name]
                     connection.write_command(command)
-                else:
-                    print("El nombre de server {} no es valido".format(name))
-                # seccion critica escribir
-                #print(response)
-                # seccion critica escribir
+            else:
+                for name in servers_names:
+                    if name in servers_dict.keys():
+                        connection = servers_dict[name]
+                        connection.write_command(command)
+                    else:
+                        print("El nombre de server {} no es valido".format(name))
+        except TimeoutExpired:
+            print("\n")
+            continue
+        except KeyboardInterrupt:
+            break
 
 
 mainclient()
