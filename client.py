@@ -1,7 +1,6 @@
 import socket
 import json
 import select
-import sys
 import signal
 
 
@@ -19,11 +18,10 @@ def input_with_timeout(prompt, timeout):
     signal.alarm(timeout)  # produce SIGALRM in `timeout` seconds
 
     try:
-        cmd = ""
         cmd = input(prompt)
         return cmd
     finally:
-        signal.alarm(0) # cancel alarm
+        signal.alarm(0)  # cancel alarm
 
 
 class ClientConnection:
@@ -55,7 +53,6 @@ class ClientConnection:
 
 def mainclient():
     servers_dict = dict()
-    posible_response = []
     servers_data = input("Ingrese la informacion de los servers (o la direccion del json) en una linea:\n")
     servers_data_split = servers_data.split(" ")
     if len(servers_data_split) == 1:
@@ -66,7 +63,6 @@ def mainclient():
             port = int (server['puerto'])
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
-            # print(server_connection.read_response())
     else:
         i = 0
         while i < len(servers_data_split):
@@ -75,15 +71,11 @@ def mainclient():
             port = int(servers_data_split[i+2])
             server_connection = ClientConnection(name, address, port)
             servers_dict[name] = server_connection
-            posible_response.append(server_connection)
-            # print(server_connection.read_response())  # <-- esto es para el saludo que envia el server a conectarse
             i += 3
-
     while True:
-        inready, outready, exready = select.select(posible_response, [], [], 3)
+        inready, outready, exready = select.select(servers_dict.values(), [], [], 3)
         for connection in inready:
             print(connection.read_response())
-        # seccion critica leer
         try:
             command = input_with_timeout("Ingrese el comando:", 10)
             servers_to_send_command = input_with_timeout("Ingrese el nombre de los servers:", 10)
