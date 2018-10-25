@@ -1,0 +1,6 @@
+[{"nombre": "servidor1",
+"direccion": "localhost",
+"puerto": 8000},
+{"nombre": "servidor2",
+"direccion": "localhost",
+"puerto": 8080}]
